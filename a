@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu Tiên 2D Game</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: lightblue; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script>
+        // Game tu tiên 2D đơn giản trên web
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        document.body.appendChild(canvas);
+        canvas.width = 800;
+        canvas.height = 600;
+
+        // Nhân vật chính
+        const player = {
+            x: 100,
+            y: 300,
+            width: 50,
+            height: 100,
+            color: "purple",
+            speed: 4,
+            vx: 0,
+            vy: 0,
+            gravity: 0.5,
+            jumpPower: -10,
+            onGround: false,
+            skills: []
+        };
+
+        const keys = {};
+        document.addEventListener("keydown", (e) => keys[e.key] = true);
+        document.addEventListener("keyup", (e) => keys[e.key] = false);
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "z") {
+                player.skills.push({ x: player.x + player.width, y: player.y + player.height / 2, speed: 6 });
+            }
+        });
+
+        // Mặt đất
+        const ground = { x: 0, y: 550, width: 800, height: 50, color: "brown" };
+
+        function update() {
+            // Điều khiển di chuyển
+            player.vx = 0;
+            if (keys["ArrowLeft"]) player.vx = -player.speed;
+            if (keys["ArrowRight"]) player.vx = player.speed;
+            
+            // Nhảy
+            if (keys["ArrowUp"] && player.onGround) {
+                player.vy = player.jumpPower;
+                player.onGround = false;
+            }
+            
+            // Áp dụng trọng lực
+            player.vy += player.gravity;
+            player.x += player.vx;
+            player.y += player.vy;
+            
+            // Chạm đất
+            if (player.y + player.height >= ground.y) {
+                player.y = ground.y - player.height;
+                player.vy = 0;
+                player.onGround = true;
+            }
+
+            // Cập nhật kỹ năng
+            player.skills.forEach((skill, index) => {
+                skill.x += skill.speed;
+                if (skill.x > canvas.width) player.skills.splice(index, 1);
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ nhân vật
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Vẽ kiếm
+            ctx.fillStyle = "silver";
+            ctx.fillRect(player.x - 10, player.y + 20, 10, 40); // Kiếm trái
+            ctx.fillRect(player.x + player.width, player.y + 20, 10, 40); // Kiếm phải
+            
+            // Vẽ mặt đất
+            ctx.fillStyle = ground.color;
+            ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
+            
+            // Vẽ kỹ năng
+            ctx.fillStyle = "orange";
+            player.skills.forEach(skill => {
+                ctx.fillRect(skill.x, skill.y, 20, 10);
+            });
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
